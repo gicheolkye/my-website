@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2028학년도 대학별 권장과목 탐색기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --navy: #0f1b2d;
+    --navy2: #162238;
+    --navy3: #1e2f47;
+    --accent: #4f8ef7;
+    --accent2: #7fb3ff;
+    --gold: #e8c06a;
+    --coral: #f07060;
+    --green: #4cb88a;
+    --pink: #d96fa0;
+    --text: #e8edf5;
+    --text2: #9aabc2;
+    --text3: #6a7f9a;
+    --border: rgba(255,255,255,0.07);
+    --card: rgba(255,255,255,0.04);
+    --card-hover: rgba(255,255,255,0.08);
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    padding: 80px 40px 60px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,142,247,0.18) 0%, transparent 70%);
+  }
+  .hero-dots {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(79,142,247,0.15) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 80% 100% at 50% 0%, black 30%, transparent 80%);
+  }
+  .badge {
+    display: inline-block;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
+    color: var(--accent2);
+    border: 1px solid rgba(79,142,247,0.4);
+    background: rgba(79,142,247,0.1);
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #ffffff 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero h1 em { font-style: italic; color: var(--gold); -webkit-text-fill-color: var(--gold); }
+  .hero-sub {
+    font-size: 15px; color: var(--text2); max-width: 520px; margin: 0 auto 40px;
+  }
+
+  /* ── STAT PILLS ── */
+  .stat-row {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 0;
+  }
+  .stat-pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 10px 22px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .stat-pill .val {
+    font-size: 20px; font-weight: 700; color: var(--accent2);
+  }
+  .stat-pill .lbl { font-size: 12px; color: var(--text3); }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px;
+  }
+
+  /* ── SECTION TITLES ── */
+  .sec-title {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.12em;
+    color: var(--text3); text-transform: uppercase;
+    margin-bottom: 16px; padding-left: 2px;
+  }
+
+  /* ── REGION CARDS ── */
+  .region-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px; margin-bottom: 48px;
+  }
+  .region-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .region-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .region-card.r-수도권::before { background: var(--accent); }
+  .region-card.r-영남권::before { background: var(--gold); }
+  .region-card.r-중부권::before { background: var(--green); }
+  .region-card.r-호남권::before { background: var(--pink); }
+  .region-card:hover { background: var(--card-hover); transform: translateY(-2px); }
+  .region-card.active { border-color: rgba(79,142,247,0.5); background: rgba(79,142,247,0.08); }
+  .region-card-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+  .region-name { font-size: 17px; font-weight: 700; }
+  .region-count { font-size: 28px; font-weight: 700; color: var(--accent2); }
+  .region-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .area-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .area-tag {
+    font-size: 11px; color: var(--text2);
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px; padding: 2px 8px;
+  }
+
+  /* ── CHART ROW ── */
+  .chart-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin-bottom: 48px;
+  }
+  @media (max-width: 680px) { .chart-row { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .chart-card-title { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 16px; }
+  .chart-wrap { position: relative; width: 100%; height: 220px; }
+
+  /* ── SUBJECT BARS ── */
+  .subj-bar-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  }
+  .subj-name { font-size: 12px; color: var(--text2); width: 120px; flex-shrink: 0; text-align: right; }
+  .subj-bg { flex: 1; background: rgba(255,255,255,0.05); border-radius: 4px; height: 18px; overflow: hidden; }
+  .subj-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+  .subj-cnt { font-size: 11px; color: var(--text3); width: 30px; text-align: right; }
+
+  /* ── SEARCH BAR ── */
+  .search-section { margin-bottom: 20px; }
+  .search-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .search-bar input {
+    flex: 1; min-width: 200px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px;
+    color: var(--text); font-size: 14px;
+    font-family: inherit; outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-bar input::placeholder { color: var(--text3); }
+  .search-bar input:focus { border-color: rgba(79,142,247,0.5); }
+  .search-bar select {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px;
+    color: var(--text); font-size: 13px;
+    font-family: inherit; outline: none; cursor: pointer;
+  }
+  .search-bar select option { background: var(--navy2); }
+  .result-info { font-size: 12px; color: var(--text3); padding: 0 4px; }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-scroll { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+  .table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .table-scroll::-webkit-scrollbar-track { background: transparent; }
+  .table-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--navy2);
+    padding: 11px 14px; text-align: left;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+    color: var(--text3); text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text); font-size: 13px;
+    vertical-align: top;
+  }
+  tbody tr:hover td { background: rgba(255,255,255,0.03); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ── REGION BADGE ── */
+  .rbadge {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    border-radius: 4px; padding: 2px 7px; white-space: nowrap;
+  }
+  .rbadge-수도권 { background: rgba(79,142,247,0.15); color: #7fb3ff; }
+  .rbadge-영남권 { background: rgba(232,192,106,0.15); color: #e8c06a; }
+  .rbadge-중부권 { background: rgba(76,184,138,0.15); color: #4cb88a; }
+  .rbadge-호남권 { background: rgba(217,111,160,0.15); color: #d96fa0; }
+
+  /* ── SUBJECT CHIP ── */
+  .chip {
+    display: inline-block; font-size: 10px;
+    background: rgba(79,142,247,0.12); color: var(--accent2);
+    border-radius: 4px; padding: 1px 6px; margin: 1px;
+  }
+  .chip-r {
+    background: rgba(76,184,138,0.1); color: #4cb88a;
+  }
+  .subj-cell { line-height: 1.8; }
+
+  /* ── DETAIL MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--navy2);
+    border: 1px solid rgba(79,142,247,0.25);
+    border-radius: 16px;
+    padding: 28px 32px;
+    max-width: 560px; width: 90%;
+    max-height: 80vh; overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(255,255,255,0.08); border: none; border-radius: 50%;
+    color: var(--text2); font-size: 18px; width: 32px; height: 32px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.14); }
+  .modal-univ { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .modal-dept { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+  .modal-row { margin-bottom: 16px; }
+  .modal-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: var(--text3); text-transform: uppercase; margin-bottom: 6px; }
+  .modal-val { font-size: 14px; color: var(--text); line-height: 1.7; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 32px;
+    font-size: 12px; color: var(--text3);
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── ANIMATIONS ── */
+  .fade-in { animation: fadeIn 0.4s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero, .region-grid, .chart-row { animation: fadeIn 0.6s ease both; }
+  .region-grid { animation-delay: 0.1s; }
+  .chart-row { animation-delay: 0.15s; }
+
+  @media (max-width: 600px) {
+    .hero { padding: 60px 20px 40px; }
+    .main { padding: 28px 16px 60px; }
+    .search-bar { flex-direction: column; }
+    .search-bar input, .search-bar select { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-dots"></div>
+  <div class="badge">2028학년도 입시 정보</div>
+  <h1>대학별 권장과목<br><em>탐색기</em></h1>
+  <p class="hero-sub">전국 47개 대학, 1,358개 모집단위의 핵심과목·권장과목을<br>한눈에 검색하고 비교하세요.</p>
+  <div class="stat-row">
+    <div class="stat-pill"><span class="val">47</span><span class="lbl">참여 대학</span></div>
+    <div class="stat-pill"><span class="val">1,358</span><span class="lbl">모집단위</span></div>
+    <div class="stat-pill"><span class="val">4</span><span class="lbl">권역</span></div>
+    <div class="stat-pill"><span class="val">14</span><span class="lbl">지역</span></div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- REGION CARDS -->
+  <p class="sec-title">권역별 현황</p>
+  <div class="region-grid" id="regionGrid">
+    <div class="region-card r-수도권" data-region="수도권" onclick="filterRegion(this)">
+      <div class="region-card-head">
+        <div>
+          <div class="region-name">수도권</div>
+          <div class="region-meta">23개 대학</div>
+        </div>
+        <div class="region-count">627</div>
+      </div>
+      <div class="area-tags">
+        <span class="area-tag">서울</span><span class="area-tag">경기</span><span class="area-tag">인천</span>
+      </div>
+    </div>
+    <div class="region-card r-중부권" data-region="중부권" onclick="filterRegion(this)">
+      <div class="region-card-head">
+        <div>
+          <div class="region-name">중부권</div>
+          <div class="region-meta">10개 대학</div>
+        </div>
+        <div class="region-count">267</div>
+      </div>
+      <div class="area-tags">
+        <span class="area-tag">대전</span><span class="area-tag">강원</span><span class="area-tag">충북</span><span class="area-tag">충남</span>
+      </div>
+    </div>
+    <div class="region-card r-호남권" data-region="호남권" onclick="filterRegion(this)">
+      <div class="region-card-head">
+        <div>
+          <div class="region-name">호남권</div>
+          <div class="region-meta">7개 대학</div>
+        </div>
+        <div class="region-count">254</div>
+      </div>
+      <div class="area-tags">
+        <span class="area-tag">광주</span><span class="area-tag">전북</span><span class="area-tag">전남</span>
+      </div>
+    </div>
+    <div class="region-card r-영남권" data-region="영남권" onclick="filterRegion(this)">
+      <div class="region-card-head">
+        <div>
+          <div class="region-name">영남권</div>
+          <div class="region-meta">7개 대학</div>
+        </div>
+        <div class="region-count">210</div>
+      </div>
+      <div class="area-tags">
+        <span class="area-tag">부산</span><span class="area-tag">경북</span><span class="area-tag">대구</span><span class="area-tag">경남</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <p class="sec-title">통계 분석</p>
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-title">권역별 모집단위 분포</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)"><span style="width:9px;height:9px;border-radius:2px;background:#4f8ef7;display:inline-block"></span>수도권 627</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)"><span style="width:9px;height:9px;border-radius:2px;background:#4cb88a;display:inline-block"></span>중부권 267</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)"><span style="width:9px;height:9px;border-radius:2px;background:#d96fa0;display:inline-block"></span>호남권 254</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)"><span style="width:9px;height:9px;border-radius:2px;background:#e8c06a;display:inline-block"></span>영남권 210</span>
+      </div>
+      <div class="chart-wrap"><canvas id="chart1" role="img" aria-label="권역별 모집단위 분포 도넛차트">수도권 627, 중부권 267, 호남권 254, 영남권 210</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">핵심과목 빈도 상위 15개</div>
+      <div id="subjBars"></div>
+    </div>
+  </div>
+
+  <!-- SEARCH & TABLE -->
+  <p class="sec-title">모집단위 탐색</p>
+  <div class="search-section">
+    <div class="search-bar">
+      <input id="qInput" type="text" placeholder="🔍  대학명, 모집단위, 과목명으로 검색...">
+      <select id="selRegion"><option value="">전체 권역</option><option>수도권</option><option>영남권</option><option>중부권</option><option>호남권</option></select>
+      <select id="selArea"><option value="">전체 지역</option></select>
+      <select id="selUniv"><option value="">전체 대학</option></select>
+      <span class="result-info" id="resultInfo"></span>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>권역</th>
+            <th>지역</th>
+            <th>대학명</th>
+            <th>모집단위</th>
+            <th>핵심과목</th>
+            <th>권장과목</th>
+          </tr>
+        </thead>
+        <tbody id="tblBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('open')">✕</button>
+    <div class="modal-univ" id="mUniv"></div>
+    <div class="modal-dept" id="mDept"></div>
+    <div class="modal-row">
+      <div class="modal-label">권역 / 지역</div>
+      <div class="modal-val" id="mRegion"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">핵심과목</div>
+      <div class="modal-val" id="mCore"></div>
+    </div>
+    <div class="modal-row" id="mReqRow">
+      <div class="modal-label">권장과목</div>
+      <div class="modal-val" id="mReq"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>※ 본 자료는 한국대학교육협의회 2028학년도 권역별 대학별 권장과목(반영과목) 자료를 기반으로 합니다.</p>
+  <p style="margin-top:6px">핵심과목: 필수적 이수를 권장하는 과목 &nbsp;|&nbsp; 권장과목: 가급적 이수를 권장하는 과목</p>
+</footer>
+
+<script>
+const DATA = [{"w":"수도권","a":"서울","u":"가톨릭대","m":"자유전공학부","c":"계열 구분 없이 자신의 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"인문사회계열","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"국어국문학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"철학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"국사학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"영어영문학부","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"중국언어문화학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"일어일본문화학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"프랑스어문화학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"국제학부","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"법학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"아동학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"신학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"사회복지학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수[수학(확률과 통계) 포함]","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"심리학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수[수학(확률과 통계) 포함]","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"사회학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수[수학(확률과 통계) 포함]","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"경영학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수[수학(확률과 통계) 포함]","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"회계학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수[수학(확률과 통계) 포함]","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"경제학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수[수학(확률과 통계) 포함]","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"행정학과","c":"인문사회계열 진로 및 적성을 고려하여 교과목 선택 이수[수학(확률과 통계) 포함]","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"물리학과","c":"물리학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"컴퓨터정보공학부","c":"물리학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"인공지능학과","c":"물리학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"화학과","c":"화학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"정보통신전자공학부","c":"물리학, 화학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"에너지환경공학과","c":"물리학, 화학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"식품영양학과","c":"화학, 생명과학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"생명공학과","c":"화학, 생명과학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"바이오메디컬화학공학과","c":"화학, 생명과학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"의생명과학과","c":"화학, 생명과학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"간호학과","c":"화학, 생명과학, 수학","r":""},{"w":"수도권","a":"서울","u":"가톨릭대","m":"의학과(의예과)","c":"화학, 생명과학, 수학","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"자유전공학부","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"문과대학","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"정치외교학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"경제학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"응용통계학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"경영학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"기술경영학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"수학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"물리학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"화학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"생명과학부","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"사회환경공학부","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"건축학부","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"기계항공공학부","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"산업공학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"전기전자공학부","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"화학공학부","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"컴퓨터공학부","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"스마트운행체계공학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"스마트ICT융합공학과","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"예술디자인대학","c":"-","r":""},{"w":"수도권","a":"서울","u":"건국대","m":"의학부(의예과)","c":"-","r":""},{"w":"수도권","a":"서울","u":"경희대","m":"인문계","c":"국어, 영어, 사회","r":"수학, 역사"},{"w":"수도권","a":"서울","u":"경희대","m":"사회계","c":"국어, 영어, 사회","r":"수학, 역사"},{"w":"수도권","a":"서울","u":"경희대","m":"법과대학","c":"국어, 영어, 사회","r":"수학, 역사"},{"w":"수도권","a":"서울","u":"경희대","m":"경영계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"수도권","a":"서울","u":"경희대","m":"이과계","c":"영어, 과학","r":"수학, 정보"},{"w":"수도권","a":"서울","u":"경희대","m":"공과계열","c":"영어, 과학","r":"수학, 정보"},{"w":"수도권","a":"서울","u":"경희대","m":"한의예과","c":"영어, 과학","r":"수학, 정보"},{"w":"수도권","a":"서울","u":"경희대","m":"의예과","c":"영어, 과학","r":"수학, 정보"},{"w":"수도권","a":"서울","u":"경희대","m":"치의예과","c":"영어, 과학","r":"수학, 정보"},{"w":"수도권","a":"서울","u":"경희대","m":"약학과","c":"영어, 과학","r":"수학, 정보"},{"w":"수도권","a":"서울","u":"경희대","m":"간호학과","c":"영어, 과학","r":"수학, 정보"},{"w":"수도권","a":"서울","u":"경희대","m":"체육계열","c":"국어, 영어","r":""},{"w":"수도권","a":"서울","u":"경희대","m":"예술계열","c":"국어, 영어","r":""},{"w":"수도권","a":"서울","u":"고려대","m":"인문계","c":"국어, 영어, 수학, 사회(역사/도덕 포함), 과학 교과","r":""},{"w":"수도권","a":"서울","u":"고려대","m":"자연계","c":"국어, 영어, 수학, 사회(역사/도덕 포함), 과학 교과","r":""},{"w":"수도권","a":"서울","u":"고려대","m":"경계계열","c":"국어, 영어, 수학, 사회(역사/도덕 포함), 과학 교과","r":""},{"w":"수도권","a":"서울","u":"고려대","m":"예체능계","c":"국어, 영어, 수학, 사회(역사/도덕 포함), 과학 교과","r":""},{"w":"수도권","a":"서울","u":"광운대","m":"인문사회계열","c":"국어, 수학, 영어, 사회","r":""},{"w":"수도권","a":"서울","u":"광운대","m":"자연계열","c":"수학, 과학","r":""},{"w":"수도권","a":"서울","u":"광운대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"수도권","a":"서울","u":"국민대","m":"전 모집단위","c":"-","r":""},{"w":"수도권","a":"서울","u":"동국대","m":"인문사회계열","c":"국어, 사회","r":"수학, 영어"},{"w":"수도권","a":"서울","u":"동국대","m":"이공계열","c":"수학, 과학","r":"영어"},{"w":"수도권","a":"서울","u":"동국대","m":"의예과","c":"수학, 과학","r":"영어"},{"w":"수도권","a":"서울","u":"동국대","m":"사범계열","c":"국어, 사회","r":"수학, 영어"},{"w":"수도권","a":"서울","u":"동국대","m":"예체능계열","c":"국어","r":"영어"},{"w":"수도권","a":"서울","u":"동국대","m":"AI융합계열","c":"수학, 과학","r":"영어"},{"w":"수도권","a":"서울","u":"덕성여대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"수도권","a":"서울","u":"덕성여대","m":"자연계열","c":"수학, 과학","r":""},{"w":"수도권","a":"서울","u":"덕성여대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"수도권","a":"서울","u":"서울과기대","m":"공학계열","c":"수학, 과학","r":""},{"w":"수도권","a":"서울","u":"서울과기대","m":"인문계열","c":"국어, 영어","r":""},{"w":"수도권","a":"서울","u":"서울대","m":"공과대학","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 과학","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"농업생명과학대학","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 과학","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"사범대학 자연교육","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 과학","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"수의과대학","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 과학","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"약학대학","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 과학","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"자연과학대학","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 과학","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"의과대학","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 과학","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"치의학대학원(학부과정)","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 과학","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"간호대학","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 과학","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"경영대학","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 사회","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"경제학부","c":"대수, 미적분Ⅰ, 확률과 통계, 미적분Ⅱ, 사회","r":"기하, 미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"사범대학 인문교육","c":"대수, 미적분Ⅰ, 확률과 통계, 사회, 국어","r":"미적분Ⅱ, 한국사"},{"w":"수도권","a":"서울","u":"서울대","m":"사회과학대학","c":"대수, 미적분Ⅰ, 확률과 통계, 사회, 국어","r":"미적분Ⅱ, 한국사"},{"w":"수도권","a":"서울","u":"서울대","m":"생활과학대학","c":"대수, 미적분Ⅰ, 확률과 통계, 사회, 국어","r":"미적분Ⅱ, 한국사"},{"w":"수도권","a":"서울","u":"서울대","m":"인문대학","c":"대수, 미적분Ⅰ, 확률과 통계, 사회, 국어","r":"미적분Ⅱ, 한국사"},{"w":"수도권","a":"서울","u":"서울대","m":"자유전공학부","c":"대수, 미적분Ⅰ, 확률과 통계","r":"미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"사범대학 교육학과","c":"대수, 미적분Ⅰ, 확률과 통계","r":"미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"음악대학","c":"대수, 미적분Ⅰ, 확률과 통계","r":"미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"미술대학","c":"대수, 미적분Ⅰ, 확률과 통계","r":"미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"법과대학","c":"대수, 미적분Ⅰ, 확률과 통계","r":"미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울대","m":"사범대학 체육교육과","c":"대수, 미적분Ⅰ, 확률과 통계","r":"미적분Ⅱ"},{"w":"수도권","a":"서울","u":"서울시립대","m":"인문사회계열","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"서울","u":"서울시립대","m":"자연계열","c":"수학, 과학","r":""},{"w":"수도권","a":"서울","u":"서울시립대","m":"경상계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"수도권","a":"서울","u":"숭실대","m":"인문계열","c":"국어, 영어","r":""},{"w":"수도권","a":"서울","u":"숭실대","m":"자연계열","c":"수학, 과학","r":""},{"w":"수도권","a":"서울","u":"숭실대","m":"경상계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"수도권","a":"서울","u":"숭실대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"수도권","a":"서울","u":"중앙대","m":"인문·사회계열","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"서울","u":"중앙대","m":"자연계열","c":"수학, 과학","r":""},{"w":"수도권","a":"서울","u":"중앙대","m":"경영경제계열","c":"국어, 수학, 영어, 사회","r":""},{"w":"수도권","a":"서울","u":"중앙대","m":"예술체능계열","c":"국어, 영어","r":""},{"w":"수도권","a":"서울","u":"한국체대","m":"전 모집단위","c":"국어, 영어","r":""},{"w":"수도권","a":"서울","u":"한양대","m":"인문·사회과학계열","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"서울","u":"한양대","m":"공학계열","c":"수학, 과학","r":""},{"w":"수도권","a":"서울","u":"한양대","m":"자연과학계열","c":"수학, 과학","r":""},{"w":"수도권","a":"서울","u":"한양대","m":"의학계열","c":"수학, 과학","r":""},{"w":"수도권","a":"서울","u":"한양대","m":"경영계열","c":"국어, 수학, 영어, 사회","r":""},{"w":"수도권","a":"서울","u":"한양대","m":"사범계열","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"서울","u":"한양대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"수도권","a":"인천","u":"인하대","m":"인문계열","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"인천","u":"인하대","m":"사회계열","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"인천","u":"인하대","m":"경상계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"수도권","a":"인천","u":"인하대","m":"자연계열","c":"수학, 과학","r":""},{"w":"수도권","a":"인천","u":"인하대","m":"공학계열","c":"수학, 과학","r":""},{"w":"수도권","a":"인천","u":"인하대","m":"의학계열","c":"수학, 과학","r":""},{"w":"수도권","a":"인천","u":"인하대","m":"사범계열","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"인천","u":"인하대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"수도권","a":"인천","u":"인하대","m":"간호학과","c":"수학, 과학","r":""},{"w":"수도권","a":"인천","u":"인하대","m":"약학과","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"경기대","m":"인문계열","c":"국어, 영어","r":""},{"w":"수도권","a":"경기","u":"경기대","m":"사회계열","c":"국어, 영어","r":""},{"w":"수도권","a":"경기","u":"경기대","m":"이공계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"경기대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"수도권","a":"경기","u":"단국대","m":"인문사회계열","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"경기","u":"단국대","m":"자연계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"단국대","m":"의학계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"단국대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"수도권","a":"경기","u":"성결대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"수도권","a":"경기","u":"성결대","m":"이공계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"성결대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"인문계열","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"사회과학계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"경영계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"자연계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"공학계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"의학계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"간호계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"소프트웨어학과","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"사이버보안학과","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"e-비즈니스학과","c":"국어, 영어, 수학, 사회","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"체육학과","c":"국어, 영어","r":""},{"w":"수도권","a":"경기","u":"아주대","m":"문화콘텐츠학과","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"경기","u":"한국항공대","m":"인문계열","c":"국어, 영어","r":""},{"w":"수도권","a":"경기","u":"한국항공대","m":"자연·공학계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"한국항공대","m":"경영계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"수도권","a":"경기","u":"한양대(ERICA)","m":"인문계열","c":"국어, 영어, 사회","r":""},{"w":"수도권","a":"경기","u":"한양대(ERICA)","m":"이공계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"한양대(ERICA)","m":"경상계열","c":"국어, 수학, 영어, 사회","r":""},{"w":"수도권","a":"경기","u":"한양대(ERICA)","m":"예체능계열","c":"국어, 영어","r":""},{"w":"수도권","a":"경기","u":"협성대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"수도권","a":"경기","u":"협성대","m":"이공계열","c":"수학, 과학","r":""},{"w":"수도권","a":"경기","u":"협성대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"영남권","a":"부산","u":"경성대학교","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"영남권","a":"부산","u":"경성대학교","m":"자연계열","c":"수학, 과학","r":""},{"w":"영남권","a":"부산","u":"경성대학교","m":"예체능계열","c":"국어, 영어","r":""},{"w":"영남권","a":"부산","u":"동아대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"영남권","a":"부산","u":"동아대","m":"자연·공학계열","c":"수학, 과학","r":""},{"w":"영남권","a":"부산","u":"동아대","m":"의학계열","c":"수학, 과학","r":""},{"w":"영남권","a":"부산","u":"동아대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"영남권","a":"부산","u":"부산대","m":"인문계","c":"국어, 영어, 사회","r":""},{"w":"영남권","a":"부산","u":"부산대","m":"사회계","c":"국어, 영어, 사회","r":""},{"w":"영남권","a":"부산","u":"부산대","m":"자연계","c":"수학, 과학","r":""},{"w":"영남권","a":"부산","u":"부산대","m":"공학계","c":"수학, 과학","r":""},{"w":"영남권","a":"부산","u":"부산대","m":"경상계","c":"국어, 영어, 수학, 사회","r":""},{"w":"영남권","a":"부산","u":"부산대","m":"의학계","c":"수학, 과학","r":""},{"w":"영남권","a":"부산","u":"부산대","m":"사범계","c":"국어, 영어, 사회","r":""},{"w":"영남권","a":"부산","u":"부산대","m":"예체능계","c":"국어, 영어","r":""},{"w":"영남권","a":"대구","u":"경북대","m":"인문사회계열","c":"국어, 영어, 사회","r":""},{"w":"영남권","a":"대구","u":"경북대","m":"자연계열","c":"수학, 과학","r":""},{"w":"영남권","a":"대구","u":"경북대","m":"공학계열","c":"수학, 과학","r":""},{"w":"영남권","a":"대구","u":"경북대","m":"경상계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"영남권","a":"대구","u":"경북대","m":"의학계열","c":"수학, 과학","r":""},{"w":"영남권","a":"대구","u":"경북대","m":"사범계열","c":"국어, 영어, 사회","r":""},{"w":"영남권","a":"대구","u":"경북대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"영남권","a":"경북","u":"영남대","m":"인문계열","c":"국어, 영어","r":""},{"w":"영남권","a":"경북","u":"영남대","m":"사회계열","c":"국어, 영어, 사회","r":""},{"w":"영남권","a":"경북","u":"영남대","m":"자연계열","c":"수학, 과학","r":""},{"w":"영남권","a":"경북","u":"영남대","m":"공학계열","c":"수학, 과학","r":""},{"w":"영남권","a":"경북","u":"영남대","m":"경상계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"영남권","a":"경북","u":"영남대","m":"의학계열","c":"수학, 과학","r":""},{"w":"영남권","a":"경북","u":"영남대","m":"사범계열","c":"국어, 영어, 사회","r":""},{"w":"영남권","a":"경북","u":"영남대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"영남권","a":"경북","u":"POSTECH","m":"이공계","c":"기하, 미적분Ⅱ, 물리학, 화학","r":""},{"w":"영남권","a":"경남","u":"진주교육대","m":"초등교육과","c":"국어, 수학, 영어, 사회(역사/도덕 포함), 과학 교과","r":""},{"w":"중부권","a":"대전","u":"국립한밭대","m":"공학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"대전","u":"국립한밭대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"중부권","a":"대전","u":"국립한밭대","m":"경상계열","c":"국어, 영어, 수학","r":""},{"w":"중부권","a":"대전","u":"대전가톨릭대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"중부권","a":"대전","u":"대전가톨릭대","m":"자연계열","c":"수학, 과학","r":""},{"w":"중부권","a":"대전","u":"대전가톨릭대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"중부권","a":"대전","u":"충남대","m":"인문계열","c":"국어, 영어, 사회","r":""},{"w":"중부권","a":"대전","u":"충남대","m":"사회계열","c":"국어, 영어, 사회","r":""},{"w":"중부권","a":"대전","u":"충남대","m":"자연계열","c":"수학, 과학","r":""},{"w":"중부권","a":"대전","u":"충남대","m":"공학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"대전","u":"충남대","m":"경상계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"중부권","a":"대전","u":"충남대","m":"의학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"대전","u":"충남대","m":"사범계열","c":"국어, 영어, 사회","r":""},{"w":"중부권","a":"대전","u":"충남대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"중부권","a":"강원","u":"강원대\n(춘천)","m":"인문계열","c":"국어, 영어, 사회","r":""},{"w":"중부권","a":"강원","u":"강원대\n(춘천)","m":"사회과학계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"중부권","a":"강원","u":"강원대\n(춘천)","m":"자연계열","c":"수학, 과학","r":""},{"w":"중부권","a":"강원","u":"강원대\n(춘천)","m":"공학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"강원","u":"강원대\n(춘천)","m":"의약학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"강원","u":"강원대\n(춘천)","m":"경영·경제계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"중부권","a":"강원","u":"강원대\n(춘천)","m":"사범계열","c":"국어, 영어, 사회","r":""},{"w":"중부권","a":"강원","u":"강원대\n(춘천)","m":"예체능계열","c":"국어, 영어","r":""},{"w":"중부권","a":"강원","u":"강원대\n(삼척·도계)","m":"공학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"강원","u":"강원대\n(삼척·도계)","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"중부권","a":"강원","u":"강원대\n(삼척·도계)","m":"자연계열","c":"수학, 과학","r":""},{"w":"중부권","a":"강원","u":"한라대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"중부권","a":"강원","u":"한라대","m":"이공계열","c":"수학, 과학","r":""},{"w":"중부권","a":"강원","u":"한라대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"중부권","a":"충북","u":"건국대\n(글로컬)","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"중부권","a":"충북","u":"건국대\n(글로컬)","m":"자연계열","c":"수학, 과학","r":""},{"w":"중부권","a":"충북","u":"건국대\n(글로컬)","m":"의학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"충북","u":"건국대\n(글로컬)","m":"예체능계열","c":"국어, 영어","r":""},{"w":"중부권","a":"충북","u":"충북대","m":"인문계열","c":"국어, 영어, 사회","r":""},{"w":"중부권","a":"충북","u":"충북대","m":"사회·경영계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"중부권","a":"충북","u":"충북대","m":"자연계열","c":"수학, 과학","r":""},{"w":"중부권","a":"충북","u":"충북대","m":"공학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"충북","u":"충북대","m":"의학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"충북","u":"충북대","m":"약학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"충북","u":"충북대","m":"사범계열","c":"국어, 영어, 사회","r":""},{"w":"중부권","a":"충북","u":"충북대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"중부권","a":"충남","u":"단국대\n(천안)","m":"인문사회계열","c":"국어, 영어, 사회","r":""},{"w":"중부권","a":"충남","u":"단국대\n(천안)","m":"자연계열","c":"수학, 과학","r":""},{"w":"중부권","a":"충남","u":"단국대\n(천안)","m":"의학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"충남","u":"단국대\n(천안)","m":"예체능계열","c":"국어, 영어","r":""},{"w":"중부권","a":"충남","u":"한국기술교육대","m":"공학계열","c":"수학, 과학","r":""},{"w":"중부권","a":"충남","u":"한국기술교육대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"호남권","a":"광주","u":"광주교육대","m":"초등교육과","c":"국어, 수학, 영어, 사회(역사/도덕 포함), 과학 교과","r":""},{"w":"호남권","a":"광주","u":"전남대\n(광주)","m":"인문계열","c":"국어, 영어, 사회","r":""},{"w":"호남권","a":"광주","u":"전남대\n(광주)","m":"사회계열","c":"국어, 영어, 사회","r":""},{"w":"호남권","a":"광주","u":"전남대\n(광주)","m":"자연계열","c":"수학, 과학","r":""},{"w":"호남권","a":"광주","u":"전남대\n(광주)","m":"공학계열","c":"수학, 과학","r":""},{"w":"호남권","a":"광주","u":"전남대\n(광주)","m":"경상계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"호남권","a":"광주","u":"전남대\n(광주)","m":"의학계열","c":"수학, 과학","r":""},{"w":"호남권","a":"광주","u":"전남대\n(광주)","m":"사범계열","c":"국어, 영어, 사회","r":""},{"w":"호남권","a":"광주","u":"전남대\n(광주)","m":"예체능계열","c":"국어, 영어","r":""},{"w":"호남권","a":"광주","u":"조선대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"호남권","a":"광주","u":"조선대","m":"자연계열","c":"수학, 과학","r":""},{"w":"호남권","a":"광주","u":"조선대","m":"의학계열","c":"수학, 과학","r":""},{"w":"호남권","a":"광주","u":"조선대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"호남권","a":"전북","u":"원광대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"호남권","a":"전북","u":"원광대","m":"자연계열","c":"수학, 과학","r":""},{"w":"호남권","a":"전북","u":"원광대","m":"의약학계열","c":"수학, 과학","r":""},{"w":"호남권","a":"전북","u":"원광대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"호남권","a":"전북","u":"전북대","m":"인문계열","c":"국어, 영어, 사회","r":""},{"w":"호남권","a":"전북","u":"전북대","m":"사회계열","c":"국어, 영어, 사회","r":""},{"w":"호남권","a":"전북","u":"전북대","m":"자연계열","c":"수학, 과학","r":""},{"w":"호남권","a":"전북","u":"전북대","m":"공학계열","c":"수학, 과학","r":""},{"w":"호남권","a":"전북","u":"전북대","m":"경상계열","c":"국어, 영어, 수학, 사회","r":""},{"w":"호남권","a":"전북","u":"전북대","m":"의학계열","c":"수학, 과학","r":""},{"w":"호남권","a":"전북","u":"전북대","m":"사범계열","c":"국어, 영어, 사회","r":""},{"w":"호남권","a":"전북","u":"전북대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"호남권","a":"전북","u":"전주대","m":"인문사회계열","c":"국어, 영어","r":""},{"w":"호남권","a":"전북","u":"전주대","m":"이공계열","c":"수학, 과학","r":""},{"w":"호남권","a":"전북","u":"전주대","m":"예체능계열","c":"국어, 영어","r":""},{"w":"호남권","a":"전남","u":"전남대\n(여수)","m":"공학계열","c":"수학, 과학","r":""},{"w":"호남권","a":"전남","u":"전남대\n(여수)","m":"자연계열","c":"수학, 과학","r":""},{"w":"호남권","a":"전남","u":"전남대\n(여수)","m":"인문사회계열","c":"국어, 영어","r":""}];
+
+const SUBJ_DATA = [["영어",288],["확률과 통계",282],["화학",277],["수학",264],["미적분Ⅰ",251],["물리학",228],["국어",204],["과학",202],["대수",201],["생명과학",200],["미적분Ⅱ",186],["사회",125],["기하",112],["영어 독해와 작문",83],["독서와 작문",79]];
+const SUBJ_COLORS = ["#4f8ef7","#4f8ef7","#4cb88a","#4cb88a","#4cb88a","#4cb88a","#e8c06a","#e8c06a","#e8c06a","#e8c06a","#e8c06a","#d96fa0","#d96fa0","#888","#888"];
+
+// ── CHART ──
+new Chart(document.getElementById('chart1'), {
+  type: 'doughnut',
+  data: {
+    labels: ['수도권','중부권','호남권','영남권'],
+    datasets: [{ data:[627,267,254,210], backgroundColor:['#4f8ef7','#4cb88a','#d96fa0','#e8c06a'], borderWidth:3, borderColor:'#162238', hoverOffset:8 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{display:false}, tooltip:{callbacks:{label:d=>` ${d.label}: ${d.raw}개`}} } }
+});
+
+// ── SUBJECT BARS ──
+const max = SUBJ_DATA[0][1];
+document.getElementById('subjBars').innerHTML = SUBJ_DATA.map(([n,c],i) =>
+  `<div class="subj-bar-row">
+    <span class="subj-name">${n}</span>
+    <div class="subj-bg"><div class="subj-fill" style="width:${Math.round(c/max*100)}%;background:${SUBJ_COLORS[i]}"></div></div>
+    <span class="subj-cnt">${c}</span>
+  </div>`
+).join('');
+
+// ── FILTER STATE ──
+let activeRegion = '';
+function filterRegion(card) {
+  const r = card.dataset.region;
+  if (activeRegion === r) { activeRegion=''; card.classList.remove('active'); }
+  else {
+    document.querySelectorAll('.region-card').forEach(c=>c.classList.remove('active'));
+    card.classList.add('active');
+    activeRegion = r;
+  }
+  document.getElementById('selRegion').value = activeRegion;
+  updateSelects();
+  renderTable();
+}
+
+// ── SELECTS ──
+function updateSelects() {
+  const w = document.getElementById('selRegion').value;
+  const a = document.getElementById('selArea').value;
+  const areaEl = document.getElementById('selArea');
+  const univEl = document.getElementById('selUniv');
+  const curA = areaEl.value;
+  const curU = univEl.value;
+
+  const areas = [...new Set(DATA.filter(r=>!w||r.w===w).map(r=>r.a))].sort();
+  areaEl.innerHTML = '<option value="">전체 지역</option>'+areas.map(x=>`<option${x===curA?' selected':''}>${x}</option>`).join('');
+
+  const univs = [...new Set(DATA.filter(r=>(!w||r.w===w)&&(!a||r.a===a)).map(r=>r.u))].sort();
+  univEl.innerHTML = '<option value="">전체 대학</option>'+univs.map(x=>`<option${x===curU?' selected':''}>${x}</option>`).join('');
+}
+
+// ── TABLE RENDER ──
+function renderTable() {
+  const w = document.getElementById('selRegion').value;
+  const a = document.getElementById('selArea').value;
+  const u = document.getElementById('selUniv').value;
+  const q = document.getElementById('qInput').value.toLowerCase();
+
+  const filtered = DATA.filter(r=>
+    (!w||r.w===w) && (!a||r.a===a) && (!u||r.u===u) &&
+    (!q || r.u.toLowerCase().includes(q) || r.m.toLowerCase().includes(q) || r.c.toLowerCase().includes(q) || r.r.toLowerCase().includes(q))
+  );
+
+  document.getElementById('resultInfo').textContent = `${filtered.length}개 결과`;
+
+  const toShow = filtered.slice(0,300);
+  document.getElementById('tblBody').innerHTML = toShow.map(r=>{
+    const chips = r.c && r.c !== '-'
+      ? r.c.split(',').map(s=>`<span class="chip">${s.trim()}</span>`).join('')
+      : `<span style="color:var(--text3);font-size:12px">-</span>`;
+    const rchips = r.r
+      ? r.r.split(',').map(s=>`<span class="chip chip-r">${s.trim()}</span>`).join('')
+      : `<span style="color:var(--text3);font-size:12px">-</span>`;
+    return `<tr onclick="openModal(${JSON.stringify(r).replace(/"/g,'&quot;')})" style="cursor:pointer">
+      <td><span class="rbadge rbadge-${r.w}">${r.w}</span></td>
+      <td style="color:var(--text3)">${r.a}</td>
+      <td style="font-weight:500">${r.u.replace('\n','')}</td>
+      <td>${r.m}</td>
+      <td class="subj-cell">${chips}</td>
+      <td class="subj-cell">${rchips}</td>
+    </tr>`;
+  }).join('') + (filtered.length>300 ? `<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--text3);font-size:13px">검색어를 입력하여 ${filtered.length-300}개 더 보기</td></tr>`:'');
+}
+
+// ── MODAL ──
+function openModal(r) {
+  document.getElementById('mUniv').textContent = r.u.replace('\n','');
+  document.getElementById('mDept').textContent = r.m;
+  document.getElementById('mRegion').textContent = `${r.w} · ${r.a}`;
+  document.getElementById('mCore').innerHTML = r.c && r.c!=='-'
+    ? r.c.split(',').map(s=>`<span class="chip" style="font-size:13px;padding:3px 10px;margin:3px">${s.trim()}</span>`).join('')
+    : '<span style="color:var(--text3)">지정 없음</span>';
+  const reqRow = document.getElementById('mReqRow');
+  if (r.r) {
+    document.getElementById('mReq').innerHTML = r.r.split(',').map(s=>`<span class="chip chip-r" style="font-size:13px;padding:3px 10px;margin:3px">${s.trim()}</span>`).join('');
+    reqRow.style.display='';
+  } else { reqRow.style.display='none'; }
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(e) {
+  if (e.target===document.getElementById('modalOverlay')) document.getElementById('modalOverlay').classList.remove('open');
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.getElementById('modalOverlay').classList.remove('open'); });
+
+// ── EVENT LISTENERS ──
+document.getElementById('selRegion').addEventListener('change', function(){
+  activeRegion = this.value;
+  document.querySelectorAll('.region-card').forEach(c=>{
+    c.classList.toggle('active', c.dataset.region===activeRegion);
+  });
+  updateSelects(); renderTable();
+});
+document.getElementById('selArea').addEventListener('change', ()=>{ updateSelects(); renderTable(); });
+document.getElementById('selUniv').addEventListener('change', renderTable);
+document.getElementById('qInput').addEventListener('input', renderTable);
+
+// ── INIT ──
+updateSelects();
+renderTable();
+</script>
+</body>
+</html>
